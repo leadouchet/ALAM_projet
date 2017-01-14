@@ -1,3 +1,4 @@
+
 import numpy as np 
 import random
 import matplotlib.pyplot as plt
@@ -19,34 +20,39 @@ def propre(x, eps): #x est une matrice type numpy
 	# On commence par creer la matrice D, diagonale et positive
 	D=np.zeros(np.shape(L))
 	for i in range(nb_ind) :
-		D[i,i]=sum(L[i])
+		D[i,i]=sum(L[i]) 
+
 	#creation de la matrice M normalisee
 	M=np.dot(np.linalg.inv(D),L)
 	#matrice symetrique Ms
-	Ms=np.dot(np.dot(np.linalg.inv(np.sqrt(D)),L),np.linalg.inv(np.sqrt(D)))
-	#decomposition de la matrice Ms
-	valpropre=[np.linalg.eig(Ms)[0]]
-	vecpropre=np.linalg.eig(Ms)[1]
-	#trie les vecteurs propres dans lordre decroissants de leur valeur propres
-	tri=np.concatenate((valpropre,vecpropre),axis=0)
-	valpropre=np.fliplr(np.sort(valpropre))
+	Ms=np.dot(np.dot(np.sqrt(D),M),np.linalg.inv(np.sqrt(D)))
+
+	#decomposition de la matrice Ms en valeur propres
+	decomposition=np.linalg.eig(Ms)
+	valpropre=decomposition[0]
+	vecpropre=decomposition[1]
+
+	#trie les vecteurs propres dans l ordre decroissants de la valeur absolue de leur valeur propres
+	tri=np.concatenate(([valpropre],vecpropre),axis=0)
+	valpropre_ordre=np.fliplr(np.sort(np.abs([valpropre])))
+
 	triage=np.zeros(np.shape(tri))
-	for i in range(np.shape(valpropre)[1]) :
-		triage[:,i]=tri[:,tri[0,:]==valpropre[0,i]][:,0]
+	for i in range(np.shape(valpropre_ordre)[1]) :
+		triage[:,i]=tri[:,tri[0,:]==valpropre_ordre[0,i]][:,0]
+	valpropre=triage[0,:]
 	vecpropre=np.delete(triage,0,axis=0)
-	print vecpropre
+
 
 	#decomposition de la matrice M=phi*V*rho
-	V=np.diag(valpropre[0,:])
-	phi=np.dot(np.linalg.inv(np.sqrt(D)),vecpropre)
-	rho=np.dot(np.transpose(vecpropre),np.sqrt(D)) #np.linalg.inv(vecpropre) ne fonctionne pas det=0
-	return (valpropre,phi,rho)
+	psi=np.dot(np.linalg.inv(np.sqrt(D)),vecpropre)
+	phi=np.dot(np.transpose(vecpropre),np.sqrt(D)) #np.linalg.inv(vecpropre) ne fonctionne pas det=0
+	return (valpropre,psi,phi)
 
-def diffusion_map(vecproprephi,valpropre,k,t):
-	phit=np.zeros((len(vecproprephi),k))
+def diffusion_map(vecproprepsi,valpropre,k,t):
+	psit=np.zeros((len(vecproprepsi),k))
 	for i in range(k) :
-		phit[:,i]=(valpropre[0,i]**t)*vecproprephi[:,i]
-	return phit
+		psit[:,i]=(valpropre[i+1]**t)*vecproprepsi[:,i+1]
+	return psit
 
 #def puissancemat(matrice,puissance):
 #	if puissance==1:
@@ -57,12 +63,12 @@ def diffusion_map(vecproprephi,valpropre,k,t):
 
 df = pd.read_csv("dCt_values.csv",sep='\t',decimal=",",header=0,index_col=0 )
 #normaliser les donnees
-x=np.array(df.values)[0:100,0:100]
-print np.shape(x)
+x=np.array(df.values)
+
 res=propre(x,1)
-res[1]
-diff=diffusion_map(res[1],res[0],90,1
-print diff
+
+diff=diffusion_map(res[1],res[0],1000, 2)
+
 #heatmap
 plt.imshow(diff, cmap='hot', interpolation='nearest')
 plt.show()
