@@ -54,21 +54,30 @@ def diffusion_map(vecproprepsi,valpropre,k,t):
 		psit[:,i]=(valpropre[i+1]**t)*vecproprepsi[:,i+1]
 	return psit
 
-#def puissancemat(matrice,puissance):
-#	if puissance==1:
-#		return matrice
-#	else :
-#		return np.dot(matrice,puissancemat(matrice,puissance-1))
 
 
-df = pd.read_csv("dCt_values.csv",sep='\t',decimal=",",header=0,index_col=0 )
+
+df = pd.read_csv("dCt_values.tab",sep='\t',decimal=",",header=0,index_col=0 )
+
 #normaliser les donnees
-x=np.array(df.values)
+x=np.array(df.values[0:5,0:5])
+print x
+
+
 
 res=propre(x,1)
 
-diff=diffusion_map(res[1],res[0],1000, 2)
+diff=diffusion_map(res[1],res[0],3, 2)
+print diff
+
+
+
+# graphes 3D
+plt.mplot3d(diff[:,0],diff[:,1],diff[:,2])
+
+
+
 
 #heatmap
-plt.imshow(diff, cmap='hot', interpolation='nearest')
-plt.show()
+#plt.imshow(diff, cmap='hot', interpolation='nearest')
+#plt.show()
